@@ -24,10 +24,10 @@ namespace WhosThat
         public Form1()
         {
             InitializeComponent();
-
             _capture = new VideoCapture();
             timer.Start();
         }
+
 
         private void btnAddNewFace_Click(object sender, EventArgs e)
         {
@@ -64,6 +64,8 @@ namespace WhosThat
         {
             // Now detection is executed in every frame, which slows down the program
             // I will try to improve this algorithm later
+            if (_capture == null)
+                return;
             using (var imageFrame = _capture.QueryFrame().ToImage<Bgr, Byte>())
             {
                 if (imageFrame == null)
@@ -78,6 +80,18 @@ namespace WhosThat
 
                 }
                 picLiveFeed.Image = imageFrame.ToBitmap();
+            }
+        }
+
+        private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if(tabControl1.SelectedTab==tabPage2)
+            {
+                timer.Stop();
+            }
+            if(tabControl1.SelectedTab==tabPage1)
+            {
+                timer.Start();
             }
         }
     }
