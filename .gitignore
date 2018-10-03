@@ -330,3 +330,12 @@ ASALocalRun/
 
 # Local History for Visual Studio
 .localhistory/
+
+# Required OpenCVSharp .dll - UWP
+!/BigBrother/BigBrother.UWP/AppX/*.dll
+
+# Required OpenCVSharp .dll - Android
+!/BigBrother/BigBrother.Android/*.dll
+
+# Required OpenCVSharp .dll - iOS
+!/BigBrother/BigBrother.iOS/*.dll
