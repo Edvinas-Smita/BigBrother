@@ -17,17 +17,37 @@ namespace WhosThat
     {
         private VideoCapture _capture;
         // Cascade classifier contains data for face recognition
-        private CascadeClassifier _cascadeClassifier = new CascadeClassifier(Application.StartupPath + "/haarcascade_frontalcatface_extended.xml");
-
+        private CascadeClassifier _cascadeClassifier = new CascadeClassifier(Application.StartupPath + @"\Recognition\HaarClassifiers\haarcascade_frontalcatface_extended.xml");
+        private bool isCameraTab = true;
 
         List<Person> listOfPeople = new List<Person>();
         public Form1()
         {
             InitializeComponent();
             _capture = new VideoCapture();
-            timer.Start();
+            Application.Idle += Application_Idle;
         }
 
+        // Event is used to obtain the next frame and detect faces
+        private void Application_Idle(object sender, EventArgs e)
+        {
+            if (_capture == null || !isCameraTab)
+                return;
+            using (var imageFrame = _capture.QueryFrame().ToImage<Bgr, Byte>())
+            {
+                if (imageFrame == null)
+                    return;
+
+                var grayframe = new Image<Gray, Byte>(imageFrame.ToBitmap());
+                var faces = _cascadeClassifier.DetectMultiScale(grayframe, 1.05, 5, Size.Empty); // The actual face detection happens here
+                foreach (var face in faces)
+                {
+                    imageFrame.Draw(face, new Bgr(Color.BurlyWood), 3); // The detected face(s) is highlighted here using a box that is drawn around it/them
+
+                }
+                picLiveFeed.Image = imageFrame.ToBitmap();
+            }
+        }
 
         private void btnAddNewFace_Click(object sender, EventArgs e)
         {
@@ -59,39 +79,15 @@ namespace WhosThat
             lblInfoAboutName.Text = "Aprašymas: " + listOfPeople[index].getBio() + Environment.NewLine + "Pomėgiai: " + listOfPeople[index].getLikes();
         }
 
-        // Timer is used to obtain the next frame and detect faces
-        private void timer_Tick(object sender, EventArgs e)
-        {
-            // Now detection is executed in every frame, which slows down the program
-            // I will try to improve this algorithm later
-            if (_capture == null)
-                return;
-            using (var imageFrame = _capture.QueryFrame().ToImage<Bgr, Byte>())
-            {
-                if (imageFrame == null)
-                    return;
-
-
-                var grayframe = new Image<Gray, Byte>(imageFrame.ToBitmap());
-                var faces = _cascadeClassifier.DetectMultiScale(grayframe, 1.01, 10, Size.Empty); // The actual face detection happens here
-                foreach (var face in faces)
-                {
-                    imageFrame.Draw(face, new Bgr(Color.BurlyWood), 3); // The detected face(s) is highlighted here using a box that is drawn around it/them
-
-                }
-                picLiveFeed.Image = imageFrame.ToBitmap();
-            }
-        }
-
         private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
         {
             if(tabControl1.SelectedTab==tabPage2)
             {
-                timer.Stop();
+                isCameraTab = false;
             }
             if(tabControl1.SelectedTab==tabPage1)
             {
-                timer.Start();
+                isCameraTab = true;
             }
         }
     }
