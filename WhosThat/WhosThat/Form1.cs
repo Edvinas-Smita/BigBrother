@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Emgu.CV;
+using Emgu.CV.CvEnum;
+using Emgu.CV.Face;
 using Emgu.CV.Structure;
 
 namespace WhosThat
@@ -19,11 +22,15 @@ namespace WhosThat
         // Cascade classifier contains data for face recognition
         private CascadeClassifier _cascadeClassifier = new CascadeClassifier(Application.StartupPath + @"\Recognition\HaarClassifiers\haarcascade_frontalcatface_extended.xml");
         private bool isCameraTab = true;
+        private FaceRecognizer recognizer;
+        private Image<Gray, Byte> currentFace;
+        private Image<Bgr, Byte> currentFaceBgr;
 
         List<Person> listOfPeople = new List<Person>();
         public Form1()
         {
             InitializeComponent();
+            recognizer = new EigenFaceRecognizer();
             _capture = new VideoCapture();
             Application.Idle += Application_Idle;
         }
@@ -31,19 +38,39 @@ namespace WhosThat
         // Event is used to obtain the next frame and detect faces
         private void Application_Idle(object sender, EventArgs e)
         {
+
             if (_capture == null || !isCameraTab)
                 return;
+
+            if (recognizer != null && File.Exists(Application.StartupPath + @"\recognizer"))
+            {
+                
+                recognizer.Read(Application.StartupPath + @"\recognizer");
+            }
+           
+
             using (var imageFrame = _capture.QueryFrame().ToImage<Bgr, Byte>())
             {
                 if (imageFrame == null)
-                    return;
+                    return; 
+
+                var result = new FaceRecognizer.PredictionResult();
 
                 var grayframe = new Image<Gray, Byte>(imageFrame.ToBitmap());
-                var faces = _cascadeClassifier.DetectMultiScale(grayframe, 1.05, 5, Size.Empty); // The actual face detection happens here
+                var faces = _cascadeClassifier.DetectMultiScale(grayframe, 1.02, 10, Size.Empty); // The actual face detection happens here
                 foreach (var face in faces)
                 {
-                    imageFrame.Draw(face, new Bgr(Color.BurlyWood), 3); // The detected face(s) is highlighted here using a box that is drawn around it/them
+                    currentFace = grayframe.Copy(face).Resize(256,256, Inter.Cubic);
+                    if (recognizer != null && File.Exists(Application.StartupPath + @"\recognizer"))
+                    {
+                        result = recognizer.Predict(currentFace);
+                        Console.WriteLine(result.Distance);
+                    }
 
+
+                    imageFrame.Draw(face, new Bgr(Color.BurlyWood), 3); // The detected face(s) is highlighted here using a box that is drawn around it/them
+                    if (recognizer != null && File.Exists(Application.StartupPath + @"\recognizer"))
+                        imageFrame.Draw(result.Label.ToString(), face.Location, FontFace.HersheyTriplex, 1.0, new Bgr(Color.Green) );
                 }
                 picLiveFeed.Image = imageFrame.ToBitmap();
             }
@@ -51,6 +78,9 @@ namespace WhosThat
 
         private void btnAddNewFace_Click(object sender, EventArgs e)
         {
+            recognizer.Train(new [] {currentFace}, new [] {1} );
+            recognizer.Write(Application.StartupPath+@"\recognizer");
+
             Person person = new Person(txtNewFaceName.Text,"","");
             listOfPeople.Add(person);
             cmbNames.Items.Add(person.getName());//pridedu i kameros comboboxa
@@ -60,6 +90,14 @@ namespace WhosThat
 
             txtNewFaceName.Text = "";
         }
+
+
+       /* public int RecognizeUser(Image userImage)
+        {
+           // recognizer.Read(Application.StartupPath);
+            //var result = recognizer.Predict(userImage. Resize(100, 100, Inter.Cubic));
+           // return result.Label;
+        }*/
 
         private void btnUpdateInfo_Click(object sender, EventArgs e)
         {
