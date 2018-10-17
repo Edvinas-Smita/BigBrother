@@ -33,7 +33,7 @@ namespace WhosThat
         private int ScanCounter { get; set; } = 0;
 
         private string YMLPath { get; set; } = Application.StartupPath +
-                                              @"\Recognition\TrainedFaces\trainingData.yml";
+                                              @"\Recognition\trainingData.yml";
         private Timer Timer { get; set; }
         private bool FaceSquare { get; set; } = true;
         private bool EyeSquare { get; set; } = true;
