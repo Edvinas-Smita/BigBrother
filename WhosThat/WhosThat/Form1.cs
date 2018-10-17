@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 
 using System.Threading.Tasks;
@@ -18,34 +19,27 @@ namespace WhosThat
 {
     public partial class Form1 : Form
     {
-        /*private VideoCapture _capture;
-        // Cascade classifier contains data for face recognition
-        //private CascadeClassifier _cascadeClassifier = new CascadeClassifier(Application.StartupPath + @"\Recognition\HaarClassifiers\lbpcascade_frontalcatface.xml");
-        private CascadeClassifier _cascadeClassifier = new CascadeClassifier(Application.StartupPath + @"\Recognition\HaarClassifiers\haarcascade_frontalcatface_extended.xml");
-        
-        private FaceRecognizer recognizer;
-        private Image<Gray, Byte> currentFace;
-        private Image<Bgr, Byte> currentFaceBgr;*/
+        private VideoCapture Webcam { get; set; }
+        private EigenFaceRecognizer FaceRecognition { get; set; }
+        private CascadeClassifier FaceDetection { get; set; }
+        private CascadeClassifier EyeDetection { get; set; }
+        private Mat Frame { get; set; }
+        private List<Image<Gray, byte>> Faces { get; set; }
+        private List<int> IDs { get; set; }
+        private int ProcessedImageWidth { get; set; } = 128;
+        private int ProcessedImageHeight { get; set; } = 150;
+        private int TimerCounter { get; set; } = 0;
+        private int TimeLimit { get; set; } = 40;
+        private int ScanCounter { get; set; } = 0;
 
-
-        public VideoCapture Webcam { get; set; }
-        public EigenFaceRecognizer FaceRecognition { get; set; }
-        public CascadeClassifier FaceDetection { get; set; }
-        public CascadeClassifier EyeDetection { get; set; }
-        public Mat Frame { get; set; }
-        public List<Image<Gray, byte>> Faces { get; set; }
-        public List<int> IDs { get; set; }
-        public int ProcessedImageWidth { get; set; } = 128;
-        public int ProcessedImageHeight { get; set; } = 150;
-        public int TimerCounter { get; set; } = 0;
-        public int TimeLimit { get; set; } = 40;
-        public int ScanCounter { get; set; } = 0;
-        public string YMLPath { get; set; } = Application.StartupPath +
-                                              @"\Recognition\HaarClassifiers\trainingData.yml";
-        public Timer Timer { get; set; }
-        public bool FaceSquare { get; set; } = true;
-        public bool EyeSquare { get; set; } = true;
+        private string YMLPath { get; set; } = Application.StartupPath +
+                                              @"\Recognition\TrainedFaces\trainingData.yml";
+        private Timer Timer { get; set; }
+        private bool FaceSquare { get; set; } = true;
+        private bool EyeSquare { get; set; } = true;
         private const int _threshold = 3750;
+
+        private int idToRemember;
 
         private bool isCameraTab = true;
 
@@ -56,16 +50,16 @@ namespace WhosThat
         public Form1()
         {
             InitializeComponent();
-            //recognizer = new EigenFaceRecognizer();
-            //_capture = new VideoCapture();
-            //Application.Idle += Application_Idle;
-
 
             FaceRecognition = new EigenFaceRecognizer(80, double.PositiveInfinity);
-            //FaceDetection = new CascadeClassifier(System.IO.Path.GetFullPath(@"../../Algo/haarcascade_frontalface_default.xml"));
+
+            if (File.Exists(YMLPath) && new FileInfo(YMLPath).Length > 0)
+            {
+                FaceRecognition.Read(YMLPath);
+            }
             FaceDetection = new CascadeClassifier(Application.StartupPath +
                                                   @"\Recognition\HaarClassifiers\haarcascade_frontalface_default.xml");
-            //EyeDetection = new CascadeClassifier(System.IO.Path.GetFullPath(@"../../Algo/haarcascade_eye.xml"));
+            
             EyeDetection = new CascadeClassifier(Application.StartupPath +
                                                  @"\Recognition\HaarClassifiers\haarcascade_eye.xml");
             Frame = new Mat();
@@ -74,7 +68,6 @@ namespace WhosThat
             InitWebcam();
         }
 
-
         private void InitWebcam()
         {
             if (Webcam == null)
@@ -82,7 +75,7 @@ namespace WhosThat
 
             Webcam.ImageGrabbed += Webcam_ImageGrabbed;
             Webcam.Start();
-            //OutputBox.AppendText($"Webcam Started...{Environment.NewLine}");
+
         }
 
 
@@ -95,73 +88,46 @@ namespace WhosThat
             {
                 var grayFrame = imageFrame.Convert<Gray, byte>();
                 var faces = FaceDetection.DetectMultiScale(grayFrame, 1.3, 5);
-                var eyes = EyeDetection.DetectMultiScale(grayFrame, 1.3, 5);
+                //var eyes = EyeDetection.DetectMultiScale(grayFrame, 1.3, 5);
 
-                if (FaceSquare)
+                if (FaceSquare && faces.Count() != 0)
                 {
-                    recognizeButton_Click(null, null);
                     foreach (var face in faces)
                     {
+                        var processedImage = grayFrame.Copy(face).Resize(ProcessedImageWidth, ProcessedImageHeight, Emgu.CV.CvEnum.Inter.Cubic);
+                        try
+                        {
+                            var result = FaceRecognition.Predict(processedImage);
+                            var label = CheckRecognizeResults(result, _threshold);
+                            imageFrame.Draw(label, face.Location, FontFace.HersheyTriplex, 1.0, new Bgr(Color.Chartreuse));
+                            Console.WriteLine();
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Message: "+ex.Message+" Data: "+ex.Data);
+                        }
                         imageFrame.Draw(face, new Bgr(Color.BurlyWood), 3);
                     }
                 }
-                if (EyeSquare)
+                /*if (EyeSquare)
                 {
                     foreach (var eye in eyes)
                     {
                         imageFrame.Draw(eye, new Bgr(Color.Yellow), 3);
                     }
-                }
+                }*/
                 picLiveFeed.Image = imageFrame.ToBitmap();
             }
         }
 
-
-        // Event is used to obtain the next frame and detect faces
-        //private void Application_Idle(object sender, EventArgs e)
-        //{
-        //    if (Webcam == null || !isCameraTab)
-        //        return;
-
-        //    /*if (recognizer != null && File.Exists(Application.StartupPath + @"\recognizer"))
-        //    {
-        //        recognizer.Read(Application.StartupPath + @"\recognizer");
-        //    }*/
-           
-
-        //    using (var imageFrame = _capture.QueryFrame().ToImage<Bgr, Byte>())
-        //    {
-        //        if (imageFrame == null)
-        //            return; 
-
-        //        var result = new FaceRecognizer.PredictionResult();
-
-        //        var grayframe = new Image<Gray, Byte>(imageFrame.Resize(0.7, Inter.Cubic).ToBitmap());
-        //        //grayframe.Resize(0.7, Inter.Cubic);
-        //        var faces = _cascadeClassifier.DetectMultiScale(grayframe, 1.1, 3, Size.Empty); // The actual face detection happens here
-        //        foreach (var face in faces)
-        //        {
-        //            currentFace = grayframe.Copy(face).Resize(256,256, Inter.Cubic);
-        //            /*if (recognizer != null && File.Exists(Application.StartupPath + @"\recognizer"))
-        //            {
-        //                result = recognizer.Predict(currentFace);
-        //                Console.WriteLine(result.Distance);
-        //            }*/
-
-
-        //            imageFrame.Draw(face, new Bgr(Color.BurlyWood), 3); // The detected face(s) is highlighted here using a box that is drawn around it/them
-        //            /*if (recognizer != null && File.Exists(Application.StartupPath + @"\recognizer"))
-        //                imageFrame.Draw(result.Label.ToString(), face.Location, FontFace.HersheyTriplex, 1.0, new Bgr(Color.Green) );*/
-        //        }
-        //        picLiveFeed.Image = imageFrame.ToBitmap();
-        //    }
-        //}
-
         private void btnAddNewFace_Click(object sender, EventArgs e)
         {
-            if (txtNewFaceName.Text != string.Empty)
+            if (txtNewFaceName.Text != string.Empty && int.TryParse(txtNewFaceName.Text, out int id))
             {
+                idToRemember = id;
+
                 Console.Write($"Training has started. {Environment.NewLine}");
+                Console.WriteLine("Person id is: "+ txtNewFaceName.Text);
                 txtNewFaceName.Enabled = !txtNewFaceName.Enabled;
 
                 Timer = new Timer();
@@ -171,18 +137,12 @@ namespace WhosThat
                 btnAddNewFace.Enabled = !btnAddNewFace.Enabled;
             }
 
-
-            /*recognizer.Train(new [] {currentFace}, new [] {Convert.ToInt32(txtNewFaceName.Text) } );
-            recognizer.Write(Application.StartupPath+@"\recognizer");*/
-
             Person person = new Person(txtNewFaceName.Text, "", "");
             listOfPeople.Add(person);
             cmbNames.Items.Add(person.getName()); //pridedu i kameros comboboxa
 
             cmbNamesInProfile.Items.Add(person.getName()); //pridedu i profilio comboboxa
-            //gana nekoks sprendimas, reiktu listenerio gal kazkokio, bet nepamenu kaip daryt
-
-            txtNewFaceName.Text = "";
+            
         }
 
         private void Timer_Tick(object sender, EventArgs e)
@@ -190,7 +150,7 @@ namespace WhosThat
             Webcam.Retrieve(Frame);
             var imageFrame = Frame.ToImage<Gray, byte>();
 
-            System.Diagnostics.Debug.WriteLine(TimerCounter);
+            //System.Diagnostics.Debug.WriteLine(TimerCounter);
 
             if (TimerCounter < TimeLimit)
             {
@@ -199,27 +159,27 @@ namespace WhosThat
                 if (imageFrame != null)
                 {
                     var faces = FaceDetection.DetectMultiScale(imageFrame, 1.3, 5);
-                    //MessageBox.Show(faces.Count().ToString());
-                    if (faces.Count() > 0)                      // linq
+                    
+                    if (faces.Count() > 0)
                     {
-                        var processedImage = imageFrame.Copy(faces[0]).Resize(ProcessedImageWidth, ProcessedImageHeight, Emgu.CV.CvEnum.Inter.Cubic);
+                        var processedImage = imageFrame.Copy(faces[0]).Resize(ProcessedImageWidth, ProcessedImageHeight,
+                            Emgu.CV.CvEnum.Inter.Cubic);
                         Faces.Add(processedImage);
-                        if (Int32.TryParse(txtNewFaceName.Text, out int idResult))
-                        {
-                            
-                        }
-                        IDs.Add(idResult);
+                        IDs.Add(int.Parse(txtNewFaceName.Text));
+                        Console.WriteLine("ID: "+IDs[IDs.Count-1]);
+
                         ScanCounter++;
-                        Console.Write($"{ScanCounter} Successful Scans Taken...{Environment.NewLine}");
-                        //OutputBox.ScrollToCaret();
+                        Console.WriteLine($"{ScanCounter} Successful Scans Taken...");
+                       
                     }
                 }
             }
             else
             {
-                if (Faces.Count > 0)                                                // should we use try catcth instead?
+                if (Faces.Count > 0)
                 {
                     System.Diagnostics.Debug.WriteLine("ADDED FACE IMAGES FOR TRAINING: " + Faces.ToArray().Length + '\n');
+                    System.Diagnostics.Debug.WriteLine("IDs array length " + IDs.ToArray().Length);
                     FaceRecognition.Train(Faces.ToArray(), IDs.ToArray());
                 }
                 EndTraining(Faces.Count > 0);
@@ -237,19 +197,19 @@ namespace WhosThat
             Console.Write($"Training Complete! {Environment.NewLine}");
             if (!facesDetected)
             {
-                Console.Write($"ERROR: No faces detected during training.{Environment.NewLine}");
+                Console.WriteLine("ERROR: No faces detected during training.");
                 MessageBox.Show("Error: No faces detected during training.");
                 return;
             }
             MessageBox.Show("Training complete!");
         }
 
-        /*public int RecognizeUser(Image userImage)
+        public int RecognizeUser(Image<Bgr, Byte> userImage)
         {
-           // recognizer.Read(Application.StartupPath);
-            //var result = recognizer.Predict(userImage. Resize(100, 100, Inter.Cubic));
-           // return result.Label;
-        }*/
+            FaceRecognition.Read(Application.StartupPath);
+            var result = FaceRecognition.Predict(userImage.Resize(100, 100, Inter.Cubic));
+            return result.Label;
+        }
 
         private void btnUpdateInfo_Click(object sender, EventArgs e)
         {
@@ -264,14 +224,7 @@ namespace WhosThat
 
 
         private void recognizeButton_Click(object sender, EventArgs e)
-        {
-            /*
-            Image hardcodedFb = Image.FromFile(@"C:\Users\ferN\Downloads\29694782_1889732117744398_5234807235305013248_o.jpg");
-
-            Bitmap bmpImage = (Bitmap)hardcodedFb;
-            var imageFrame = new Image<Gray, byte>(bmpImage); */
-
-
+        { 
             Webcam.Retrieve(Frame);
             var imageFrame = Frame.ToImage<Gray, byte>();
 
@@ -289,13 +242,12 @@ namespace WhosThat
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine("No faces trained, can't recognize");
+                        //Console.WriteLine("No faces trained, can't recognize");
                     }
-
                 }
                 else
                 {
-                    Console.WriteLine("No faces found");
+                    //Console.WriteLine("No faces found");
                 }
 
             }
@@ -317,7 +269,8 @@ namespace WhosThat
                 EigenDistance = (float)result.Distance;
                 EigenLabel = EigenDistance > threshold ? "Unknown" : result.Label.ToString();
             }
-            return EigenLabel + '\n' + "Distance: " + EigenDistance.ToString();
+
+            return EigenLabel;// + '\n' + "Distance: " + EigenDistance.ToString();
 
         }
 
