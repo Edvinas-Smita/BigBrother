@@ -4,12 +4,24 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WhosThat.Recognition;
+using System.Data.Linq;
+using System.Data.Linq.Mapping;
 
 namespace WhosThat
 {
     public class Person
     {
-        
+
+        private class TableRow
+        {
+            private string name, bio, likes;
+            public TableRow(string n, string b, string l)
+            {
+                this.name = n;
+                this.bio = b;
+                this.likes = l;
+            }
+        }
 
         private string name;
 
@@ -27,6 +39,22 @@ namespace WhosThat
             this.name = name;
             this.bio = bio;
             this.likes = likes;
+        }
+
+        public void AddToDB()
+        {
+            string dbname = "../../../../local.sdf";
+            Northwind db = new Northwind(dbname);
+            db.people.InsertOnSubmit(new TableRow(name, bio, likes));
+            try { db.SubmitChanges() } catch
+            {
+                Console.Write("database error\n");
+            }
+            finally
+            {
+                db.Dispose();
+            }
+
         }
 
 
