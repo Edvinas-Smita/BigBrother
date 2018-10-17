@@ -23,6 +23,8 @@ namespace WhosThat
             }
         }
 
+        public static string dbname = "../../../../local.sdf";
+
         private string name;
 
         private string bio;
@@ -43,10 +45,9 @@ namespace WhosThat
 
         public void AddToDB()
         {
-            string dbname = "../../../../local.sdf";
             Northwind db = new Northwind(dbname);
             db.people.InsertOnSubmit(new TableRow(name, bio, likes));
-            try { db.SubmitChanges() } catch
+            try { db.SubmitChanges(); } catch
             {
                 Console.Write("database error\n");
             }
@@ -55,6 +56,17 @@ namespace WhosThat
                 db.Dispose();
             }
 
+        }
+
+        public static List<Person> UpdatePeopleList() // TODO: fix Northwind assemply reference, couldn't figure this out in 3 hours
+        {
+            Northwind db = new Northwind(dbname);
+            var query = from p in db.People
+                        select p;
+            foreach(People p in query)
+            {
+
+            }
         }
 
 
