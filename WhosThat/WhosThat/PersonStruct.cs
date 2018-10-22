@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using WhosThat.Recognition;
 using System.Data.Linq;
 using System.Data.Linq.Mapping;
+using System.Data.SqlServerCe;
+using System.Data;
 
 namespace WhosThat
 {
@@ -42,33 +44,41 @@ namespace WhosThat
             this.bio = bio;
             this.likes = likes;
         }
-
+        
         public void AddToDB()
         {
-            Northwind db = new Northwind(dbname);
-            db.people.InsertOnSubmit(new TableRow(name, bio, likes));
-            try { db.SubmitChanges(); } catch
+            SqlCeConnection connection = new SqlCeConnection("datasource="+dbname + "; password=pass");
+
+            using (SqlCeDataAdapter adapter = new SqlCeDataAdapter("select * from people", connection))
             {
-                Console.Write("database error\n");
-            }
-            finally
-            {
-                db.Dispose();
+                DataSet data = new DataSet();
+                try
+                {
+                    adapter.Fill(data);
+                    DataTable table = new DataTable();
+                    table = data.Tables["People"];
+                    if (table != null)
+                    {
+                        foreach (DataRow row in table.Rows)
+                        {
+                            Console.WriteLine(row[0].ToString());
+                        }
+                    }
+                }
+                catch (SqlCeException e){
+                    Console.WriteLine(e.ToString());
+                    return;
+                }
             }
 
+            connection.Close();
         }
 
         public static List<Person> UpdatePeopleList() // TODO: fix Northwind assemply reference, couldn't figure this out in 3 hours
         {
-            Northwind db = new Northwind(dbname);
-            var query = from p in db.People
-                        select p;
-            foreach(People p in query)
-            {
-
-            }
+            return null;
         }
-
+        
 
         //setteriai getteriai
         public void setBio(string bio)

@@ -174,6 +174,7 @@ namespace WhosThat
                 recognizer.Write(Application.StartupPath+@"\recognizer");*/
 
                 Person person = new Person(txtNewFaceName.Text, "", "");
+                person.AddToDB();
                 listOfPeople.Add(person);
                 cmbNames.Items.Add(person.getName()); //pridedu i kameros comboboxa
 
