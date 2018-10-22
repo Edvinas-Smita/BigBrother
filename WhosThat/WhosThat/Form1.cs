@@ -2,13 +2,17 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
+using System.Runtime.Remoting.Channels;
 using System.Threading;
 using System.Windows.Forms;
 using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Face;
 using Emgu.CV.Structure;
+using WhosThat.Recognition;
 using WhosThat.Recognition.Util;
+using WhosThat.UserManagement.Util;
 
 namespace WhosThat
 {
@@ -38,7 +42,6 @@ namespace WhosThat
         public int ScanCounter { get; set; } = 0;
         public string YMLPath { get; set; } = Application.StartupPath +
                                               @"\Recognition\HaarClassifiers\trainingData.yml";
-        public Timer Timer { get; set; }
         public bool FaceSquare { get; set; } = true;
         public bool EyeSquare { get; set; } = true;
         private const int _threshold = 3750;
@@ -49,21 +52,50 @@ namespace WhosThat
 
         List<Person> listOfPeople = new List<Person>();
 
+	    private static string FaceHaarCascadePath = @"Recognition\HaarClassifiers\haarcascade_frontalface_default.xml";
+	    private static string EyeHaarCascadePath = @"Recognition\HaarClassifiers\haarcascade_eye.xml";
+	    private static string DetectorDataPath = @"TEST.xml";
+
+		private Person loggedInUser;
+
 	    private ConcurrentHashSet<FaceInfo> knownFaces = new ConcurrentHashSet<FaceInfo>();
-	    private static byte MAX_DETECTION_THREAD_COUNT = 16;
+	    private static byte MAX_DETECTION_THREAD_COUNT = 16;	//otherwise it would create new thread every frame
 	    private byte currentDetectionThreadCount = 0;
 		public Form1()
         {
             InitializeComponent();
 
-			/*recognizer = new EigenFaceRecognizer();
-	        _capture = new VideoCapture();
-	        Application.Idle += Application_Idle;*/
+	        EmguSingleton.Instance.SetUp
+	        (
+		        FaceHaarCascadePath,
+		        EyeHaarCascadePath,
+				DetectorDataPath
+			);
+			
+			//	TEST DATA
+	        Storage.People.Add(Test.TestUser.CreateTestPerson("BC"));
+	        Storage.People.Add(Test.TestUser.CreateTestPerson("DJ"));
+	        Storage.People.Add(Test.TestUser.CreateTestPerson("DT"));
+	        Storage.People.Add(Test.TestUser.CreateTestPerson(""));
+	        loggedInUser = Storage.People[3];
+			//	TEST DATA
+	        userBioTextBox.DataBindings.Add(new Binding("Text", loggedInUser, "Bio"));
+	        userLikesTextBox.DataBindings.Add(new Binding("Text", loggedInUser, "Likes"));
+	        UtilStatic.SetupUserPicturePanel(loggedInUser, userPicturePanel);
 
-			CameraThread();
-			/*Thread cameraThread = new Thread(new ThreadStart(CameraThread));
-			cameraThread.Start();*/
-	        ThreadStart recognitionThreadStart = new ThreadStart(RecognitionThread);
+			userDebugNameCombo.DataSource = new BindingSource(Storage.People, "");
+	        userDebugNameCombo.DisplayMember = "Name";
+	        userDebugNameCombo.SelectionChangeCommitted += (IChannelSender, args) =>
+	        {
+		        loggedInUser = (Person) userDebugNameCombo.SelectedItem;
+				userBioTextBox.DataBindings.Clear();
+		        userBioTextBox.DataBindings.Add(new Binding("Text", loggedInUser, "Bio"));
+		        userLikesTextBox.DataBindings.Clear();
+				userLikesTextBox.DataBindings.Add(new Binding("Text", loggedInUser, "Likes"));
+				UtilStatic.SetupUserPicturePanel(loggedInUser, userPicturePanel);
+			};
+
+			ThreadStart recognitionThreadStart = new ThreadStart(DetectionThread);
 
 	        StagingSingleton.Instance.PropertyChanged += (sender, args) =>	//executed whenever a new frame is retrieved TODO: move to seperate function
 	        {
@@ -83,14 +115,12 @@ namespace WhosThat
 				        finalImage.Draw(knownFaceEyeRecrangle, new Bgr(Color.Aqua), 2);
 			        }
 			        //all known faces are labeled
-			        finalImage.Draw(knownFace.info.Label.ToString(), knownFace.faceRectangle.Location, FontFace.HersheyTriplex, 1.0, new Bgr(Color.Green));
+			        finalImage.Draw(Storage.findPersonByID(knownFace.info.Label).Name, knownFace.faceRectangle.Location, FontFace.HersheyTriplex, 1.0, new Bgr(Color.Green));
 		        }
 
 		        picLiveFeed.Image = finalImage.ToBitmap();
 				finalImage.Dispose();
 	        };
-		}
-
 
             FaceRecognition = new EigenFaceRecognizer(80, double.PositiveInfinity);
             //FaceDetection = new CascadeClassifier(System.IO.Path.GetFullPath(@"../../Algo/haarcascade_frontalface_default.xml"));
@@ -103,49 +133,41 @@ namespace WhosThat
             Faces = new List<Image<Gray, byte>>();
             IDs = new List<int>();
             InitWebcam();
+	        Application.ApplicationExit += (sender, args) => {
+		        if (Webcam != null)
+		        {
+			        Webcam.Stop();
+		        }
+	        };
         }
 
 
         private void InitWebcam()
         {
             if (Webcam == null)
-                Webcam = new VideoCapture();
-
-            Webcam.ImageGrabbed += Webcam_ImageGrabbed;
-            Webcam.Start();
-            //OutputBox.AppendText($"Webcam Started...{Environment.NewLine}");
-        }
-
-
-            using (var imageFrame = _capture.QueryFrame().ToImage<Bgr, Byte>())
             {
-                if (imageFrame == null)
-                    return; 
-
-                var result = new FaceRecognizer.PredictionResult();
-
-                if (FaceSquare)
-                {
-                    recognizeButton_Click(null, null);
-                    foreach (var face in faces)
-                    {
-                        imageFrame.Draw(face, new Bgr(Color.BurlyWood), 3);
-                    }
-                }
-                if (EyeSquare)
-                {
-                    foreach (var eye in eyes)
-                    {
-                        imageFrame.Draw(eye, new Bgr(Color.Yellow), 3);
-                    }
-                }
-                picLiveFeed.Image = imageFrame.ToBitmap();
+	            Webcam = new VideoCapture();
             }
+
+	        var mat = new Mat();
+	        Webcam.ImageGrabbed += (a, b) =>
+	        {
+		        if (StagingSingleton.Instance.RawCameraMat != null)
+		        {
+			        Webcam.Retrieve(mat);  //doesnt work directly because it doesnt use the setter method and therefor doesnt cause property changed event
+			        StagingSingleton.Instance.RawCameraMat = mat.Clone();
+		        }
+	        };
+            Webcam.Start();
+
+			//OutputBox.AppendText($"Webcam Started...{Environment.NewLine}");
         }
 
         private void btnAddNewFace_Click(object sender, EventArgs e)
         {
-            if (txtNewFaceName.Text != string.Empty)
+	        var addFaceForm = new AddFaceForm(knownFaces, StagingSingleton.Instance.RawCameraMat.ToImage<Bgr, byte>());
+	        addFaceForm.Show();
+            /*if (txtNewFaceName.Text != string.Empty)
             {
                 Console.Write($"Training has started. {Environment.NewLine}");
                 txtNewFaceName.Enabled = !txtNewFaceName.Enabled;
@@ -159,7 +181,7 @@ namespace WhosThat
 
 
             /*recognizer.Train(new [] {currentFace}, new [] {Convert.ToInt32(txtNewFaceName.Text) } );
-            recognizer.Write(Application.StartupPath+@"\recognizer");*/
+            recognizer.Write(Application.StartupPath+@"\recognizer");#1#
 
             Person person = new Person(txtNewFaceName.Text, "", "");
             listOfPeople.Add(person);
@@ -168,7 +190,7 @@ namespace WhosThat
             cmbNamesInProfile.Items.Add(person.getName()); //pridedu i profilio comboboxa
             //gana nekoks sprendimas, reiktu listenerio gal kazkokio, bet nepamenu kaip daryt
 
-            txtNewFaceName.Text = "";
+            txtNewFaceName.Text = "";*/
         }
 
         private void Timer_Tick(object sender, EventArgs e)
@@ -216,7 +238,7 @@ namespace WhosThat
         private void EndTraining(bool facesDetected)
         {
             FaceRecognition.Write(YMLPath);
-            Timer.Stop();
+            //Timer.Stop();
             TimerCounter = 0;
             btnAddNewFace.Enabled = !btnAddNewFace.Enabled;
             txtNewFaceName.Enabled = !txtNewFaceName.Enabled;
@@ -239,13 +261,13 @@ namespace WhosThat
 
         private void btnUpdateInfo_Click(object sender, EventArgs e)
         {
-            int index = listOfPeople.FindIndex(x => x.getName().Equals(cmbNamesInProfile.Text));//kolkas padariau kad programa ieskotu reikiamo objekto is comboboxe pasirinkto vardo, ne perfect
+            int index = listOfPeople.FindIndex(x => x.getName().Equals(userDebugNameCombo.Text));//kolkas padariau kad programa ieskotu reikiamo objekto is comboboxe pasirinkto vardo, ne perfect
             
-            listOfPeople[index].setBio(txtBio.Text);
-            listOfPeople[index].setLikes(txtLikes.Text);
+            listOfPeople[index].setBio(userBioTextBox.Text);
+            listOfPeople[index].setLikes(userLikesTextBox.Text);
 
-            txtBio.Text = "";
-            txtLikes.Text = "";
+            userBioTextBox.Text = "";
+            userLikesTextBox.Text = "";
         }
 
 
@@ -283,7 +305,6 @@ namespace WhosThat
                 {
                     Console.WriteLine("No faces found");
                 }
-
             }
         }
 
@@ -304,7 +325,6 @@ namespace WhosThat
                 EigenLabel = EigenDistance > threshold ? "Unknown" : result.Label.ToString();
             }
             return EigenLabel + '\n' + "Distance: " + EigenDistance.ToString();
-
         }
 
 
@@ -319,79 +339,83 @@ namespace WhosThat
         {
             if(tabControl1.SelectedTab==tabPage2)
             {
-                //isCameraTab = false;
-                Webcam.Stop();
+	            //isCameraTab = false;
+	            if (Webcam != null)
+	            {
+		            Webcam.Stop();
+	            }
             }
             if(tabControl1.SelectedTab==tabPage1)
             {
-                //isCameraTab = true;
-                Webcam.Start();
+	            //isCameraTab = true;
+	            if (Webcam != null)
+	            {
+		            Webcam.Start();
+	            }
             }
         }
-
-	    private void CameraThread()
-	    {
-		    var capture = new VideoCapture();
-		    if (capture == null)
-		    {
-			    throw new ArgumentNullException("N/A", "Unable to create VideoCapture");
-		    }
-
-		    /*while (true)
-		    {
-				StagingSingleton.Instance.RawCameraMat = capture.QueryFrame();
-			    //Thread.Sleep(1000 / 24);
-		    }*/
-			var mat = new Mat();
-		    capture.ImageGrabbed += (a, b) =>
-			{
-				if (StagingSingleton.Instance.RawCameraMat != null)
-				{
-					capture.Retrieve(mat);	//doesnt work directly because it doesnt use the setter method and therefor doesnt cause property changed event
-					StagingSingleton.Instance.RawCameraMat = mat.Clone();
-				}
-		    };
-			capture.Start();
-	    }
 		
-	    private void RecognitionThread()
+	    private void DetectionThread()
 	    {
-		    long timeStart = DateTime.Now.Ticks;
 			if (!isCameraTab || StagingSingleton.Instance.RawCameraMat == null)
 			{
 				return;
 			}
-
+		    //long timeStart = DateTime.Now.Ticks;
 			++currentDetectionThreadCount;
 
-			if (recognizer != null && File.Exists(Application.StartupPath + @"\recognizer"))	//Is this fatal or not?
-			{
-				recognizer.Read(Application.StartupPath + @"\recognizer");
-			}
+		    try
+		    {
+			    var grayframe = StagingSingleton.Instance.RawCameraMat.ToImage<Gray, Byte>();
+			    var faces = EmguSingleton.Instance.FaceDetector.DetectMultiScale(grayframe, 1.3, 5);	//The actual face detection happens here
+			    var eyes = EmguSingleton.Instance.EyeDetector.DetectMultiScale(grayframe, 1.3, 5);
 
-			var result = new FaceRecognizer.PredictionResult();
-
-			var grayframe = StagingSingleton.Instance.RawCameraMat.ToImage<Gray, Byte>();
-			var faces = _cascadeClassifier.DetectMultiScale(grayframe, 1.3, 5); // The actual face detection happens here
-		    var eyes = eyeClassifier.DetectMultiScale(grayframe, 1.3, 5);
-			var newFaces = new ConcurrentHashSet<FaceInfo>();
-			foreach (var face in faces)
-			{
-				currentFace = grayframe.Copy(face).Resize(256, 256, Inter.Cubic);	//Do we need to resize?
-				if (recognizer != null && File.Exists(Application.StartupPath + @"\recognizer"))
-				{
-					result = recognizer.Predict(currentFace);
-					Console.WriteLine(result.Distance);
+			    var newFaces = new ConcurrentHashSet<FaceInfo>();
+			    foreach (var face in faces)
+			    {
+				    var faceInfo = FaceInfo.FaceWithEyes(face, eyes);	//returns null if face rectangle has no eye rectangles within
+					if (faceInfo != null)
+					{
+						faceInfo.info = EmguSingleton.Instance.Recognizer.Predict(grayframe.GetSubRect(face));
+						Console.WriteLine(faceInfo.info.Distance);
+						newFaces.Add(faceInfo);
+					}
 				}
-				currentFace.Dispose();
-				FaceInfo.AddToSetIfValid(face, eyes, newFaces);
-			}
-			grayframe.Dispose();
-			
-			knownFaces = newFaces;
+			    grayframe.Dispose();
 
-			//Console.WriteLine("Face count: {0}, time: {1}ms", newFaces.Count, (DateTime.Now.Ticks - timeStart) / 10000);
+				knownFaces = newFaces;
+		    }
+		    catch (Exception e)
+		    {
+			    Console.WriteLine(e);
+		    }
+
+			//Console.WriteLine("Face count: {0}, detection time: {1}ms", newFaces.Count, (DateTime.Now.Ticks - timeStart) / 10000);
 			--currentDetectionThreadCount;
 		}
-    }
+
+		private void userAddPic_Click(object sender, EventArgs e)
+		{
+			var openFileDialog = new OpenFileDialog();
+			openFileDialog.Multiselect = false;	//TODO: add ability to choose multiple files
+			openFileDialog.Title = "Pasirinkite nuotrauką";
+			openFileDialog.Filter = "Image files|*.jpg;*.png";	//TODO: more image file extensions
+			if (openFileDialog.ShowDialog(this) == DialogResult.OK)
+			{
+				try
+				{
+					loggedInUser.Images.Add(new Bitmap(openFileDialog.FileName));
+				}
+				catch (Exception exception)
+				{
+					Console.WriteLine(exception);
+				}
+			}
+		}
+
+		private void button1_Click(object sender, EventArgs e)
+		{
+			EmguSingleton.Instance.Recognizer.Write(DetectorDataPath);
+		}
+	}
 }

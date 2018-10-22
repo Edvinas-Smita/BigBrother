@@ -8,11 +8,11 @@ using Emgu.CV.Face;
 
 namespace WhosThat.Recognition.Util
 {
-	class FaceInfo
+	public class FaceInfo	//data class for showing detected faces on screen
 	{
-		public readonly Rectangle faceRectangle;
-		public readonly List<Rectangle> eyeRecrangles;
-		public readonly FaceRecognizer.PredictionResult info;
+		public Rectangle faceRectangle;
+		public List<Rectangle> eyeRecrangles;
+		public FaceRecognizer.PredictionResult info;
 
 		private FaceInfo(Rectangle face, List<Rectangle> eyes, FaceRecognizer.PredictionResult info = new FaceRecognizer.PredictionResult())
 		{
@@ -21,7 +21,7 @@ namespace WhosThat.Recognition.Util
 			this.info = info;
 		}
 
-		public static void AddToSetIfValid(Rectangle face, Rectangle[] eyes, ConcurrentHashSet<FaceInfo> set)
+		public static FaceInfo FaceWithEyes(Rectangle face, Rectangle[] eyes)	//method for checking if the face has any eyes (without this i was getting faces detected randomly on the scenery behind me)
 		{
 			List<Rectangle> eyesWithinFace = new List<Rectangle>();
 			foreach (var eye in eyes)
@@ -32,10 +32,7 @@ namespace WhosThat.Recognition.Util
 				}
 			}
 
-			if (eyesWithinFace.Count > 0)
-			{
-				set.Add(new FaceInfo(face, eyesWithinFace));
-			}
+			return eyesWithinFace.Count > 0 ? new FaceInfo(face, eyesWithinFace) : null;
 		}
 	}
 }

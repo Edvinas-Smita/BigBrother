@@ -6,7 +6,7 @@ namespace WhosThat.Recognition.Util
 {
 	class StagingSingleton : INotifyPropertyChanged
 	{
-		public event PropertyChangedEventHandler PropertyChanged = delegate(object sender, PropertyChangedEventArgs args) {  };
+		public event PropertyChangedEventHandler PropertyChanged = delegate (object sender, PropertyChangedEventArgs args) { };
 		public static StagingSingleton Instance = new StagingSingleton();
 		private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
 
@@ -46,6 +46,6 @@ namespace WhosThat.Recognition.Util
 			}
 		}
 
-		private StagingSingleton(){}
+		private StagingSingleton() { }
 	}
 }
