@@ -143,9 +143,9 @@ namespace WhosThat
 
             Person person = new Person(txtNewFaceName.Text, "", "");
             listOfPeople.Add(person);
-            cmbNames.Items.Add(person.getName()); //pridedu i kameros comboboxa
+            cmbNames.Items.Add(person.Name); //pridedu i kameros comboboxa
 
-            cmbNamesInProfile.Items.Add(person.getName()); //pridedu i profilio comboboxa
+            cmbNamesInProfile.Items.Add(person.Name); //pridedu i profilio comboboxa
             
         }
 
@@ -222,10 +222,10 @@ namespace WhosThat
             Match matchLikes = regex.Match(txtLikes.Text);
             if (matchBio.Success && matchLikes.Success)
             {
-                int index = listOfPeople.FindIndex(x => x.getName().Equals(cmbNamesInProfile.Text));//kolkas padariau kad programa ieskotu reikiamo objekto is comboboxe pasirinkto vardo, ne perfect
+                int index = listOfPeople.FindIndex(x => x.Name.Equals(cmbNamesInProfile.Text));//kolkas padariau kad programa ieskotu reikiamo objekto is comboboxe pasirinkto vardo, ne perfect
 
-                listOfPeople[index].setBio(txtBio.Text);
-                listOfPeople[index].setLikes(txtLikes.Text);
+                listOfPeople[index].Bio = txtBio.Text;
+                listOfPeople[index].Likes = txtLikes.Text;
 
                 txtBio.Text = "";
                 txtLikes.Text = "";
@@ -288,9 +288,9 @@ namespace WhosThat
 
         private void btnShowInfo_Click(object sender, EventArgs e)
         {
-            int index = listOfPeople.FindIndex(x => x.getName().Equals(cmbNames.Text));//kolkas padariau kad programa ieskotu reikiamo objekto is comboboxe pasirinkto vardo, ne perfect
+            int index = listOfPeople.FindIndex(x => x.Name.Equals(cmbNames.Text));//kolkas padariau kad programa ieskotu reikiamo objekto is comboboxe pasirinkto vardo, ne perfect
             
-            lblInfoAboutName.Text = "Aprašymas: " + listOfPeople[index].getBio() + Environment.NewLine + "Pomėgiai: " + listOfPeople[index].getLikes();
+            lblInfoAboutName.Text = "Aprašymas: " + listOfPeople[index].Bio + Environment.NewLine + "Pomėgiai: " + listOfPeople[index].Likes;
         }
 
         private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)

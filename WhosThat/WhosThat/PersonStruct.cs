@@ -9,11 +9,13 @@ namespace WhosThat
 {
     public class Person
     {
-        private string name;
+        public int Id { get; set; }
 
-        private string bio;
+        public string Name { get; set; }
 
-        private string likes;
+        public string Bio { get; set; }
+
+        public string Likes { get; set; }
 
         //Reikia prideti nuotrauku lista kurias vartotojas issaugoja, kad profilyje galetume atvaizduoti
 
@@ -21,41 +23,9 @@ namespace WhosThat
 
         public Person(string name, string bio, string likes)
         {
-            this.name = name;
-            this.bio = bio;
-            this.likes = likes;
-        }
-
-
-        //setteriai getteriai
-        public void setBio(string bio)
-        {
-            this.bio = bio;
-        }
-
-        public string getBio()
-        {
-            return bio;
-        }
-
-        public void setName(string name)
-        {
-            this.name = name;
-        }
-
-        public string getName()
-        {
-            return name;
-        }
-
-        public void setLikes(string likes)
-        {
-            this.likes = likes;
-        }
-
-        public string getLikes()
-        {
-            return likes;
+            Name = name;
+            Bio = bio;
+            Likes = likes;
         }
 
     }
