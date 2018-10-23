@@ -8,25 +8,25 @@ namespace WhosThat
 {
     public static class IdFactory
     {
-        public static int Id
+        public static int NextId
         {
             get
             {
-                Id++;
-                Properties.Settings.Default["lastId"] = Id;
-                return Id;
+                NextId++;
+                Properties.Settings.Default["lastId"] = NextId;
+                return NextId;
             }
-            private set { Id = value; }
+            private set { NextId = value; }
         }
 
         public static void SetCurrentId(int id)
         {
-            Properties.Settings.Default["lastId"] = Id;
+            Properties.Settings.Default["lastId"] = NextId;
         }
 
         static IdFactory()
         {
-            Id = (int)Properties.Settings.Default["lastId"];
+            NextId = (int)Properties.Settings.Default["lastId"];
         }
 
     }
