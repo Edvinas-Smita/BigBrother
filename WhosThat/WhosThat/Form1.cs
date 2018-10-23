@@ -220,7 +220,7 @@ namespace WhosThat
             Regex regex = new Regex(@"(.|\s)*\S(.|\s)*");
             Match matchBio = regex.Match(txtBio.Text);
             Match matchLikes = regex.Match(txtLikes.Text);
-            if (matchBio.Success && matchLikes.Success)
+            if (matchBio.Success && matchLikes.Success && cmbNamesInProfile.SelectedIndex!=-1)
             {
                 int index = listOfPeople.FindIndex(x => x.Name.Equals(cmbNamesInProfile.Text));//kolkas padariau kad programa ieskotu reikiamo objekto is comboboxe pasirinkto vardo, ne perfect
 
