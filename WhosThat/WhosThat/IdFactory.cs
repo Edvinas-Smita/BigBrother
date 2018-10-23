@@ -12,6 +12,7 @@ namespace WhosThat
 
         public static void SetCurrentId(int id)
         {
+            _nextId = id;
             Properties.Settings.Default["lastId"] = id;
         }
 
