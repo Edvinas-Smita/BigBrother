@@ -126,9 +126,9 @@ namespace WhosThat
 
         private void btnAddNewFace_Click(object sender, EventArgs e)
         {
-            if (txtNewFaceName.Text != string.Empty && int.TryParse(txtNewFaceName.Text, out int id))
+            if (txtNewFaceName.Text != string.Empty)
             {
-                idToRemember = id;
+                idToRemember = IdFactory.NextId;
 
                 Console.Write($"Training has started. {Environment.NewLine}");
                 Console.WriteLine("Person id is: "+ txtNewFaceName.Text);
@@ -143,9 +143,9 @@ namespace WhosThat
 
             Person person = new Person(txtNewFaceName.Text, "", "");
             listOfPeople.Add(person);
-            cmbNames.Items.Add(person.getName()); //pridedu i kameros comboboxa
+            cmbNames.Items.Add(person.Name); //pridedu i kameros comboboxa
 
-            cmbNamesInProfile.Items.Add(person.getName()); //pridedu i profilio comboboxa
+            cmbNamesInProfile.Items.Add(person.Name); //pridedu i profilio comboboxa
             
         }
 
@@ -220,12 +220,12 @@ namespace WhosThat
             Regex regex = new Regex(@"(.|\s)*\S(.|\s)*");
             Match matchBio = regex.Match(txtBio.Text);
             Match matchLikes = regex.Match(txtLikes.Text);
-            if (matchBio.Success && matchLikes.Success)
+            if (matchBio.Success && matchLikes.Success && cmbNamesInProfile.SelectedIndex!=-1)
             {
-                int index = listOfPeople.FindIndex(x => x.getName().Equals(cmbNamesInProfile.Text));//kolkas padariau kad programa ieskotu reikiamo objekto is comboboxe pasirinkto vardo, ne perfect
+                int index = listOfPeople.FindIndex(x => x.Name.Equals(cmbNamesInProfile.Text));//kolkas padariau kad programa ieskotu reikiamo objekto is comboboxe pasirinkto vardo, ne perfect
 
-                listOfPeople[index].setBio(txtBio.Text);
-                listOfPeople[index].setLikes(txtLikes.Text);
+                listOfPeople[index].Bio = txtBio.Text;
+                listOfPeople[index].Likes = txtLikes.Text;
 
                 txtBio.Text = "";
                 txtLikes.Text = "";
@@ -288,9 +288,9 @@ namespace WhosThat
 
         private void btnShowInfo_Click(object sender, EventArgs e)
         {
-            int index = listOfPeople.FindIndex(x => x.getName().Equals(cmbNames.Text));//kolkas padariau kad programa ieskotu reikiamo objekto is comboboxe pasirinkto vardo, ne perfect
+            int index = listOfPeople.FindIndex(x => x.Name.Equals(cmbNames.Text));//kolkas padariau kad programa ieskotu reikiamo objekto is comboboxe pasirinkto vardo, ne perfect
             
-            lblInfoAboutName.Text = "Aprašymas: " + listOfPeople[index].getBio() + Environment.NewLine + "Pomėgiai: " + listOfPeople[index].getLikes();
+            lblInfoAboutName.Text = "Aprašymas: " + listOfPeople[index].Bio + Environment.NewLine + "Pomėgiai: " + listOfPeople[index].Likes;
         }
 
         private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
