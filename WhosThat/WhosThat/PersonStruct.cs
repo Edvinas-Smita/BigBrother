@@ -9,14 +9,11 @@ namespace WhosThat
 {
     public class Person
     {
-        
-
         private string name;
 
         private string bio;
 
         private string likes;
-
 
         //Reikia prideti nuotrauku lista kurias vartotojas issaugoja, kad profilyje galetume atvaizduoti
 
