@@ -8,7 +8,7 @@ namespace WhosThat.Recognition
         public static List<Face> Faces { get; set; } = new List<Face>();
         public static BindingList<Person> People = new BindingList<Person>();
 
-        public static Person findPersonByID(int id)
+        public static Person FindPersonByID(int id)
         {
             foreach (var person in People)
             {

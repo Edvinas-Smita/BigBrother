@@ -74,6 +74,8 @@
     <Compile Include="Recognition\Interfaces\IDataStoreAccess.cs" />
     <Compile Include="Recognition\RecognizerEngine.cs" />
     <Compile Include="Recognition\Storage.cs" />
+    <Compile Include="Recognition\Util\EmguSingleton.cs" />
+    <Compile Include="UserManagement\Util\UtilStatic.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
