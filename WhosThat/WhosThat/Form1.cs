@@ -47,6 +47,8 @@ namespace WhosThat
 
         List<Person> listOfPeople = new List<Person>();
 
+        List<Person> currentPeople = new List<Person>();
+
         public Form1()
         {
             InitializeComponent();
@@ -81,6 +83,8 @@ namespace WhosThat
 
         private void Webcam_ImageGrabbed(object sender, EventArgs e)
         {
+            currentPeople = new List<Person>();
+
             Webcam.Retrieve(Frame);
             var imageFrame = Frame.ToImage<Bgr, byte>();
 
