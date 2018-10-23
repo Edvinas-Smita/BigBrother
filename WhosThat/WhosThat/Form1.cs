@@ -126,9 +126,9 @@ namespace WhosThat
 
         private void btnAddNewFace_Click(object sender, EventArgs e)
         {
-            if (txtNewFaceName.Text != string.Empty && int.TryParse(txtNewFaceName.Text, out int id))
+            if (txtNewFaceName.Text != string.Empty)
             {
-                idToRemember = id;
+                idToRemember = IdFactory.NextId;
 
                 Console.Write($"Training has started. {Environment.NewLine}");
                 Console.WriteLine("Person id is: "+ txtNewFaceName.Text);
