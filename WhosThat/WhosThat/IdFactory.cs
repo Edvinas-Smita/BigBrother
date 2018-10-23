@@ -19,6 +19,11 @@ namespace WhosThat
             private set { Id = value; }
         }
 
+        public static void SetCurrentId(int id)
+        {
+            Properties.Settings.Default["lastId"] = Id;
+        }
+
         static IdFactory()
         {
             Id = (int)Properties.Settings.Default["lastId"];
