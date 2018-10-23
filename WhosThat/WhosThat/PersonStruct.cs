@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using WhosThat.Recognition;
 using System.Data.Linq;
 using System.Data.Linq.Mapping;
-using System.Data.SqlServerCe;
 using System.Data;
+using Microsoft.Data.Sqlite;
 
 namespace WhosThat
 {
@@ -25,7 +25,27 @@ namespace WhosThat
             }
         }
 
-        public static string dbname = "../../../../local.sdf";
+        public static void initDB()
+        {
+            using (SqliteConnection conn = new SqliteConnection("Filename=local.db"))
+            {
+                conn.Open();
+
+                String tableCommand = "CREATE TABLE IF NOT " +
+                    "EXISTS people (Id INTEGER PRIMARY KEY, " +
+                    "name NVARCHAR(30) NOT NULL)" +
+                    "surname NVARCHAR(30) NOT NULL)" +
+                    "bio NVARCHAR(150) NULL)" +
+                    "likes NVARCHAR(100) NULL)"
+                    ;
+
+                SqliteCommand createTable = new SqliteCommand(tableCommand, conn);
+
+                createTable.ExecuteReader();
+            }
+        }
+
+        //public static string dbname = "../../../../local.sdf";
 
         private string name;
 
@@ -47,31 +67,8 @@ namespace WhosThat
         
         public void AddToDB()
         {
-            SqlCeConnection connection = new SqlCeConnection("datasource="+dbname + "; password=pass");
+ 
 
-            using (SqlCeDataAdapter adapter = new SqlCeDataAdapter("select * from people", connection))
-            {
-                DataSet data = new DataSet();
-                try
-                {
-                    adapter.Fill(data);
-                    DataTable table = new DataTable();
-                    table = data.Tables["People"];
-                    if (table != null)
-                    {
-                        foreach (DataRow row in table.Rows)
-                        {
-                            Console.WriteLine(row[0].ToString());
-                        }
-                    }
-                }
-                catch (SqlCeException e){
-                    Console.WriteLine(e.ToString());
-                    return;
-                }
-            }
-
-            connection.Close();
         }
 
         public static List<Person> UpdatePeopleList() // TODO: fix Northwind assemply reference, couldn't figure this out in 3 hours
