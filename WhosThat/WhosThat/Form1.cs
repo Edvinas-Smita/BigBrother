@@ -128,7 +128,7 @@ namespace WhosThat
         {
             if (txtNewFaceName.Text != string.Empty)
             {
-                idToRemember = IdFactory.NextId;
+                idToRemember = IdFactory.GetCurrentId();
 
                 Console.Write($"Training has started. {Environment.NewLine}");
                 Console.WriteLine("Person id is: "+ txtNewFaceName.Text);
