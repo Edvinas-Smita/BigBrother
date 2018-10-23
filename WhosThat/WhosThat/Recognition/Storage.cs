@@ -12,7 +12,7 @@ namespace WhosThat.Recognition
         {
             foreach (var person in People)
             {
-                if (person.id == id)
+                if (person.Id == id)
                 {
                     return person;
                 }
