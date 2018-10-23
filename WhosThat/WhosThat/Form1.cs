@@ -7,7 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
-
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Emgu.CV;
@@ -217,13 +217,20 @@ namespace WhosThat
 
         private void btnUpdateInfo_Click(object sender, EventArgs e)
         {
-            int index = listOfPeople.FindIndex(x => x.getName().Equals(cmbNamesInProfile.Text));//kolkas padariau kad programa ieskotu reikiamo objekto is comboboxe pasirinkto vardo, ne perfect
-            
-            listOfPeople[index].setBio(txtBio.Text);
-            listOfPeople[index].setLikes(txtLikes.Text);
+            Regex regex = new Regex(@"(.|\s)*\S(.|\s)*");
+            Match matchBio = regex.Match(txtBio.Text);
+            Match matchLikes = regex.Match(txtLikes.Text);
+            if (matchBio.Success && matchLikes.Success)
+            {
+                int index = listOfPeople.FindIndex(x => x.getName().Equals(cmbNamesInProfile.Text));//kolkas padariau kad programa ieskotu reikiamo objekto is comboboxe pasirinkto vardo, ne perfect
 
-            txtBio.Text = "";
-            txtLikes.Text = "";
+                listOfPeople[index].setBio(txtBio.Text);
+                listOfPeople[index].setLikes(txtLikes.Text);
+
+                txtBio.Text = "";
+                txtLikes.Text = "";
+            }
+            else MessageBox.Show("Invalid input");
         }
 
 
