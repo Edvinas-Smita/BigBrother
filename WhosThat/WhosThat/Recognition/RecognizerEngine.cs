@@ -51,7 +51,7 @@ namespace WhosThat.Recognition
 						grayScaleFaces[i] = grayScaleFull.Copy(faceRects[0]).Resize(128, 128, Inter.Cubic);
 					} else
 					{
-						grayScaleFaces[i] = grayScaleFull.Clone().Resize(256, 256, Inter.Cubic);
+						grayScaleFaces[i] = grayScaleFull.Clone().Resize(128, 128, Inter.Cubic);
 					}
 					grayScaleFull.Dispose();
 				}

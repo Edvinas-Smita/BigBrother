@@ -32,7 +32,7 @@ namespace WhosThat
         private int ProcessedImageWidth { get; set; } = 128;
         private int ProcessedImageHeight { get; set; } = 128;
         private int TimerCounter { get; set; } = 0;
-        private int TimeLimit { get; set; } = 40;
+        private int TimeLimit { get; set; } = 20;
         private int ScanCounter { get; set; } = 0;
 
         private string YMLPath { get; set; } = Application.StartupPath +
@@ -145,9 +145,9 @@ namespace WhosThat
                         try
                         {
                             var result = FaceRecognition.Predict(processedImage);
-                            var label = CheckRecognizeResults(result, _threshold);
-	                        var recognisedPerson = Storage.FindPersonByID(result.Label);
-	                        var personNameIfFound = recognisedPerson == null
+                            //var id = CheckRecognizeResults(result, _threshold);
+	                        var recognisedPerson = CheckRecognizeResults(result, _threshold);
+                            var personNameIfFound = recognisedPerson == null
 		                        ? "Spooky ghost no. " + result.Label.ToString()
 		                        : recognisedPerson.Name;
 							imageFrame.Draw(personNameIfFound, face.Location, FontFace.HersheyTriplex, 1.0, new Bgr(Color.Chartreuse));	//since we dont store person objects over restarts we wont have any info about the id
@@ -297,7 +297,7 @@ namespace WhosThat
             }
         }
 
-        private string CheckRecognizeResults(FaceRecognizer.PredictionResult result, int threshold)
+        private Person CheckRecognizeResults(FaceRecognizer.PredictionResult result, int threshold)
         {
             // @param threshold should usually be in [0, 5000]
             string EigenLabel;
@@ -306,15 +306,22 @@ namespace WhosThat
             {
                 EigenLabel = "Unknown";
                 EigenDistance = 0;
+                return null;
             }
             else
             {
                 EigenLabel = result.Label.ToString();
                 EigenDistance = (float)result.Distance;
-                EigenLabel = EigenDistance > threshold ? "Unknown" : result.Label.ToString();
+                //EigenLabel = EigenDistance > threshold ? "Unknown" : result.Label.ToString();
+                if (EigenDistance < threshold)
+                {
+                    return Storage.FindPersonByID(result.Label);
+                }
+                
             }
 
-            return EigenLabel;// + '\n' + "Distance: " + EigenDistance.ToString();
+            return null;
+            //return EigenLabel;// + '\n' + "Distance: " + EigenDistance.ToString();
 
         }
 
