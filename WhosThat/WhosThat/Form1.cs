@@ -99,7 +99,15 @@ namespace WhosThat
 				UtilStatic.SetupUserPicturePanel(panel: userPicturePanel, user: loggedInUser);	//named parameters - reverse order to the declaration
 	        };
 
-	        #endregion
+	        cmbNames.SelectedIndex = -1;
+	        cmbNames.DataSource = new BindingSource(Storage.People, "");
+	        cmbNames.DisplayMember = "Name";
+			cmbNames.SelectedIndexChanged += (IChannelSender, args) =>
+			{
+				lblInfoAboutName.Text = "Aprašymas: " + ((Person) cmbNames.SelectedItem).Bio + Environment.NewLine + "Pomėgiai: " + ((Person) cmbNames.SelectedItem).Likes;
+			};
+
+			#endregion
 
 			engine = new RecognizerEngine("", YMLPath);
 	        FaceRecognition = engine._faceRecognizer;//new EigenFaceRecognizer(80, double.PositiveInfinity);
@@ -329,14 +337,6 @@ namespace WhosThat
             return null;
             //return EigenLabel;// + '\n' + "Distance: " + EigenDistance.ToString();
 
-        }
-
-
-        private void btnShowInfo_Click(object sender, EventArgs e)
-        {
-            int index = listOfPeople.FindIndex(x => x.Name.Equals(cmbNames.Text));//kolkas padariau kad programa ieskotu reikiamo objekto is comboboxe pasirinkto vardo, ne perfect
-            
-            lblInfoAboutName.Text = "Aprašymas: " + listOfPeople[index].Bio + Environment.NewLine + "Pomėgiai: " + listOfPeople[index].Likes;
         }
 
         private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
