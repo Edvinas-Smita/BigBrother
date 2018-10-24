@@ -75,14 +75,7 @@ namespace WhosThat.UserManagement.Util
 			{
 				if (i != 0)
 				{
-					panel.Controls.Add(new Label()  //acts as a divisor between pictures
-					{
-						Text = "",
-						BorderStyle = BorderStyle.Fixed3D,
-						AutoSize = false,
-						Height = 2,
-						Width = realPanelWidth
-					});
+					panel.Controls.Add(HSeperatorFactory(realPanelWidth));
 				}
 
 				var userImage = user.Images[i];
