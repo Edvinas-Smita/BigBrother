@@ -20,6 +20,13 @@ using WhosThat.UserManagement.Util;
 
 namespace WhosThat
 {
+    enum Flags : byte
+    {
+        FACE_SQUARE = 1<<0,
+        EYE_SQUARE = 1<<1,
+        IS_CAMERA_TAB = 1<<2
+    }
+
     public partial class Form1 : Form
     {
         private VideoCapture Webcam { get; set; }
@@ -38,13 +45,12 @@ namespace WhosThat
         private string YMLPath { get; set; } = Application.StartupPath +
                                               @"\Recognition\trainingData.yml";
         private Timer Timer { get; set; }
-        private bool FaceSquare { get; set; } = true;
-        private bool EyeSquare { get; set; } = true;
+
+        private byte flags = (byte)Flags.EYE_SQUARE | (byte)Flags.FACE_SQUARE | (byte)Flags.IS_CAMERA_TAB;
+
         private const int _threshold = 3750;
 
         private int idToRemember;
-
-        private bool isCameraTab = true;
 
         private MouseEventArgs _removeMe;
 
@@ -137,7 +143,7 @@ namespace WhosThat
                 var faces = FaceDetection.DetectMultiScale(grayFrame, 1.3, 5);
                 //var eyes = EyeDetection.DetectMultiScale(grayFrame, 1.3, 5);
 
-                if (FaceSquare && faces.Count() != 0)
+                if ((flags & (byte)~Flags.FACE_SQUARE) != 0 && faces.Count() != 0)
                 {
                     foreach (var face in faces)
                     {
