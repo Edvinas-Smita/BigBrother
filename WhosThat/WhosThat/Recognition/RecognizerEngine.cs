@@ -24,7 +24,7 @@ namespace WhosThat.Recognition
             _faceRecognizer = new EigenFaceRecognizer(80, double.PositiveInfinity);
         }
 
-        public bool TrainRecognizer()
+        public bool TrainRecognizer(int widthToProccess = 128, int heightToProccess = 128)
         {
 	        var allPeople = Storage.People;
 			if (allPeople != null)
@@ -48,10 +48,10 @@ namespace WhosThat.Recognition
 					var faceRects = EmguSingleton.DetectFacesFromGrayscale(grayScaleFull);
 					if (faceRects.Length > 0)
 					{
-						grayScaleFaces[i] = grayScaleFull.Copy(faceRects[0]).Resize(128, 128, Inter.Cubic);
+						grayScaleFaces[i] = grayScaleFull.Copy(faceRects[0]).Resize(widthToProccess, heightToProccess, Inter.Cubic);
 					} else
 					{
-						grayScaleFaces[i] = grayScaleFull.Clone().Resize(128, 128, Inter.Cubic);
+						grayScaleFaces[i] = grayScaleFull.Clone().Resize(widthToProccess, heightToProccess, Inter.Cubic);
 					}
 					grayScaleFull.Dispose();
 				}
