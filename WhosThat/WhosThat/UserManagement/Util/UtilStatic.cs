@@ -13,7 +13,7 @@ using WhosThat.Recognition.Util;
 
 namespace WhosThat.UserManagement.Util
 {
-	static class UtilStatic
+	public static class UtilStatic
 	{
 		public static void SetupUserPicturePanel(Person user, FlowLayoutPanel panel)
 		{
@@ -43,12 +43,34 @@ namespace WhosThat.UserManagement.Util
 			};
 		}
 
+		public static Size ResizeByWidthMaintainAspectRatio(Size original, int newWidth)
+		{
+			return original.Width != 0 ? new Size(newWidth, original.Height * newWidth / original.Width) : new Size(0, original.Height);
+		}
+
+		public static int PanelWidthForNoHScrollBar(FlowLayoutPanel panel)
+		{
+			return panel.Width -
+			       panel.Margin.Horizontal -
+			       SystemInformation.VerticalScrollBarWidth;
+		}
+
+		public static Label HSeperatorFactory(int width)
+		{
+			return new Label()
+			{
+				Text = "",
+				BorderStyle = BorderStyle.Fixed3D,
+				AutoSize = false,
+				Height = 2,
+				Width = width
+			};
+		}
+
 		private static void RepopulatePanel(Person user, FlowLayoutPanel panel) //Fills the user picture panel with the images from the user object
 		{
 			panel.Controls.Clear();
-			int realPanelWidth = panel.Width -
-								 panel.Margin.Horizontal -
-								 SystemInformation.VerticalScrollBarWidth;   //width for the panel to not show the horizontal scroll bar
+			int realPanelWidth = PanelWidthForNoHScrollBar(panel);
 			for (int i = 0; i < user.Images.Count; ++i)
 			{
 				if (i != 0)
@@ -77,11 +99,7 @@ namespace WhosThat.UserManagement.Util
 				panel.Controls.Add(new PictureBox()
 				{
 					Image = userImage,
-					Size = new Size
-					(
-						realPanelWidth,
-						userImage.Height * realPanelWidth / userImage.Width
-					),  //picture box fitting the panel width and maintaining the picture aspect ratio
+					Size = ResizeByWidthMaintainAspectRatio(userImage.Size, realPanelWidth),	//picture box fitting the panel width and maintaining the picture aspect ratio
 					SizeMode = PictureBoxSizeMode.Zoom
 				});
 			}
