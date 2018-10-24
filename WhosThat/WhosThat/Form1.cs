@@ -96,7 +96,7 @@ namespace WhosThat
 		        userNameTextBox.DataBindings.Add(new Binding("Text", loggedInUser, "Name"));
 		        userBioTextBox.DataBindings.Add(new Binding("Text", loggedInUser, "Bio"));
 		        userLikesTextBox.DataBindings.Add(new Binding("Text", loggedInUser, "Likes"));
-				UtilStatic.SetupUserPicturePanel(loggedInUser, userPicturePanel);
+				UtilStatic.SetupUserPicturePanel(panel: userPicturePanel, user: loggedInUser);	//named parameters - reverse order to the declaration
 	        };
 
 	        #endregion
