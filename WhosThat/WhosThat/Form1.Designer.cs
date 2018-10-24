@@ -36,7 +36,6 @@
 			this.txtNewFaceName = new System.Windows.Forms.TextBox();
 			this.btnAddNewFace = new System.Windows.Forms.Button();
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
-			this.btnShowInfo = new System.Windows.Forms.Button();
 			this.lblInfoAboutName = new System.Windows.Forms.Label();
 			this.label2 = new System.Windows.Forms.Label();
 			this.cmbNames = new System.Windows.Forms.ComboBox();
@@ -44,6 +43,9 @@
 			this.lblNames = new System.Windows.Forms.Label();
 			this.label1 = new System.Windows.Forms.Label();
 			this.tabPage2 = new System.Windows.Forms.TabPage();
+			this.userDebugAddBlank = new System.Windows.Forms.Button();
+			this.userNameTextBox = new System.Windows.Forms.TextBox();
+			this.label8 = new System.Windows.Forms.Label();
 			this.userAddPic = new System.Windows.Forms.Button();
 			this.userPicturePanel = new System.Windows.Forms.FlowLayoutPanel();
 			this.label7 = new System.Windows.Forms.Label();
@@ -54,9 +56,6 @@
 			this.userDebugNameCombo = new System.Windows.Forms.ComboBox();
 			this.label4 = new System.Windows.Forms.Label();
 			this.timer = new System.Windows.Forms.Timer(this.components);
-			this.userNameTextBox = new System.Windows.Forms.TextBox();
-			this.label8 = new System.Windows.Forms.Label();
-			this.userDebugAddBlank = new System.Windows.Forms.Button();
 			this.tabControl1.SuspendLayout();
 			this.tabPage1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.picLiveFeed)).BeginInit();
@@ -135,7 +134,6 @@
 			// 
 			// groupBox1
 			// 
-			this.groupBox1.Controls.Add(this.btnShowInfo);
 			this.groupBox1.Controls.Add(this.lblInfoAboutName);
 			this.groupBox1.Controls.Add(this.label2);
 			this.groupBox1.Controls.Add(this.cmbNames);
@@ -148,21 +146,10 @@
 			this.groupBox1.TabStop = false;
 			this.groupBox1.Text = "Daugiau informacijos:";
 			// 
-			// btnShowInfo
-			// 
-			this.btnShowInfo.Location = new System.Drawing.Point(8, 79);
-			this.btnShowInfo.Margin = new System.Windows.Forms.Padding(2);
-			this.btnShowInfo.Name = "btnShowInfo";
-			this.btnShowInfo.Size = new System.Drawing.Size(92, 33);
-			this.btnShowInfo.TabIndex = 3;
-			this.btnShowInfo.Text = "Rodyti";
-			this.btnShowInfo.UseVisualStyleBackColor = true;
-			this.btnShowInfo.Click += new System.EventHandler(this.btnShowInfo_Click);
-			// 
 			// lblInfoAboutName
 			// 
 			this.lblInfoAboutName.AutoSize = true;
-			this.lblInfoAboutName.Location = new System.Drawing.Point(9, 140);
+			this.lblInfoAboutName.Location = new System.Drawing.Point(4, 76);
 			this.lblInfoAboutName.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
 			this.lblInfoAboutName.Name = "lblInfoAboutName";
 			this.lblInfoAboutName.Size = new System.Drawing.Size(28, 22);
@@ -244,6 +231,34 @@
 			this.tabPage2.TabIndex = 1;
 			this.tabPage2.Text = "Mano profilis";
 			this.tabPage2.UseVisualStyleBackColor = true;
+			// 
+			// userDebugAddBlank
+			// 
+			this.userDebugAddBlank.Location = new System.Drawing.Point(404, 4);
+			this.userDebugAddBlank.Name = "userDebugAddBlank";
+			this.userDebugAddBlank.Size = new System.Drawing.Size(28, 28);
+			this.userDebugAddBlank.TabIndex = 14;
+			this.userDebugAddBlank.Text = "+";
+			this.userDebugAddBlank.UseVisualStyleBackColor = true;
+			this.userDebugAddBlank.Click += new System.EventHandler(this.userDebugAddBlank_Click);
+			// 
+			// userNameTextBox
+			// 
+			this.userNameTextBox.Location = new System.Drawing.Point(392, 97);
+			this.userNameTextBox.Margin = new System.Windows.Forms.Padding(2);
+			this.userNameTextBox.Name = "userNameTextBox";
+			this.userNameTextBox.Size = new System.Drawing.Size(363, 27);
+			this.userNameTextBox.TabIndex = 13;
+			// 
+			// label8
+			// 
+			this.label8.AutoSize = true;
+			this.label8.Location = new System.Drawing.Point(388, 73);
+			this.label8.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+			this.label8.Name = "label8";
+			this.label8.Size = new System.Drawing.Size(115, 22);
+			this.label8.TabIndex = 12;
+			this.label8.Text = "Tavo vardas:";
 			// 
 			// userAddPic
 			// 
@@ -329,34 +344,6 @@
 			this.label4.TabIndex = 0;
 			this.label4.Text = "Pasirink vardą (Debug only):";
 			// 
-			// userNameTextBox
-			// 
-			this.userNameTextBox.Location = new System.Drawing.Point(392, 97);
-			this.userNameTextBox.Margin = new System.Windows.Forms.Padding(2);
-			this.userNameTextBox.Name = "userNameTextBox";
-			this.userNameTextBox.Size = new System.Drawing.Size(363, 27);
-			this.userNameTextBox.TabIndex = 13;
-			// 
-			// label8
-			// 
-			this.label8.AutoSize = true;
-			this.label8.Location = new System.Drawing.Point(388, 73);
-			this.label8.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-			this.label8.Name = "label8";
-			this.label8.Size = new System.Drawing.Size(115, 22);
-			this.label8.TabIndex = 12;
-			this.label8.Text = "Tavo vardas:";
-			// 
-			// userDebugAddBlank
-			// 
-			this.userDebugAddBlank.Location = new System.Drawing.Point(404, 4);
-			this.userDebugAddBlank.Name = "userDebugAddBlank";
-			this.userDebugAddBlank.Size = new System.Drawing.Size(28, 28);
-			this.userDebugAddBlank.TabIndex = 14;
-			this.userDebugAddBlank.Text = "+";
-			this.userDebugAddBlank.UseVisualStyleBackColor = true;
-			this.userDebugAddBlank.Click += new System.EventHandler(this.userDebugAddBlank_Click);
-			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -399,7 +386,6 @@
 		private System.Windows.Forms.Label label5;
 		private System.Windows.Forms.ComboBox userDebugNameCombo;
 		private System.Windows.Forms.Label label4;
-		private System.Windows.Forms.Button btnShowInfo;
 		private System.Windows.Forms.PictureBox picLiveFeed;
 		private System.Windows.Forms.Timer timer;
 		private System.Windows.Forms.Label label7;
